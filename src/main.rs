@@ -184,7 +184,6 @@ fn main() {
         }
     };
 
-    let mut bw = BufWriter::new(stdout().lock());
     let print_dir =
         |bw: &mut BufWriter<StdoutLock<'static>>, path: &Path, under_quae: &mut Vec<String>| {
             let dir = read_dir(path).unwrap();
@@ -213,6 +212,9 @@ fn main() {
                         .len()
                         .cmp(&a.metadata().unwrap().len())
                 });
+            }
+            if is_reverse {
+                entrys.reverse();
             }
             if !is_reverse {
                 meup_print(bw);
@@ -283,22 +285,26 @@ fn main() {
                 meup_print(bw);
             }
 
-            writeln!(bw, "").unwrap();
+            writeln!(bw, "\n").unwrap();
             if is_under {
+                let entrys_len = entrys.len();
+                let mut temp = Vec::with_capacity(entrys_len);
                 for entry in entrys.iter() {
                     if entry.metadata().unwrap().is_dir() {
                         let path = entry.path();
                         let path = path.to_string_lossy().to_string();
-                        under_quae.push(path);
+                        temp.push(path);
                     }
                 }
+                temp.reverse();
+                under_quae.extend(temp);
             }
         };
 
     // 파일 출력
+    let mut bw = BufWriter::new(stdout().lock());
     while let Some(path) = under_quae.pop() {
         print_dir(&mut bw, Path::new(&path), &mut under_quae);
-        writeln!(bw, "").unwrap();
     }
     bw.flush().unwrap();
 }
